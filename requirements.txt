@@ -1,1 +1,4 @@
 requests
+PyYAML
+feedparser
+python-dotenv

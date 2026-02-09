@@ -1,23 +1,36 @@
 import logging
+from radar.config import config
 from radar.connectors.knowhow_feed import _parse_rss_with_feedparser
 from radar.integrations.slack import send_to_slack
 
-def main():
+def run_daily(publish: bool = True):
     logging.basicConfig(level=logging.INFO)
-    logging.info("Starting daily keyword search...")
+    logging.info("Starting daily execution...")
 
-    # Example: Fetch RSS feed data
-    rss_data = """<rss>...</rss>"""  # Replace with actual RSS feed fetching logic
-    parsed_data = _parse_rss_with_feedparser(rss_data)
+    # Load configuration
+    sources = config.sources
+    rules = config.rules
 
-    # Filter data based on keywords
-    keywords = ["example", "keyword"]
-    filtered_results = [item for item in parsed_data if any(kw in item['title'] for kw in keywords)]
+    # Collect data from enabled sources
+    raw_items = []
+    for source_id, source_cfg in sources.items():
+        if source_cfg["connector"] == "knowhow_feed":
+            raw_items.extend(_parse_rss_with_feedparser(source_cfg["api"]))
+
+    # Apply rules to filter/tag items
+    filtered_items = []
+    for item in raw_items:
+        for rule in rules:
+            if any(keyword in item["title"] for keyword in rule["keywords"]):
+                item["tags"] = rule["tags"]
+                filtered_items.append(item)
+                break
 
     # Send results to Slack
-    for result in filtered_results:
-        message = f"Title: {result['title']}\nURL: {result['url']}\nPublished: {result['published_at']}"
-        send_to_slack(message)
+    if publish:
+        for item in filtered_items:
+            message = f"Title: {item['title']}\nURL: {item['url']}\nTags: {', '.join(item['tags'])}"
+            send_to_slack(message)
 
 if __name__ == "__main__":
-    main()
+    run_daily()
