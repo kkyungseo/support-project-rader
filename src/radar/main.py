@@ -3,6 +3,15 @@ from radar.config import config
 from radar.connectors.knowhow_feed import _parse_rss_with_feedparser
 from radar.integrations.slack import send_to_slack
 
+def format_results_for_console(results):
+    print("\n=== 수집 결과 ===")
+    for item in results:
+        print(f"- 제목: {item['title']}")
+        print(f"  기간: {item['date']}")
+        print(f"  링크: {item['link']}")
+        print(f"  매칭 키워드: {', '.join(item['keywords'])}")
+        print()
+
 def run_daily(publish: bool = True):
     logging.basicConfig(level=logging.INFO)
     logging.info("Starting daily execution...")
@@ -26,10 +35,13 @@ def run_daily(publish: bool = True):
                 filtered_items.append(item)
                 break
 
-    # Send results to Slack
+    # Print results to console for GitHub Actions logs
+    format_results_for_console(filtered_items)
+
+    # Optionally send results to Slack
     if publish:
         for item in filtered_items:
-            message = f"Title: {item['title']}\nURL: {item['url']}\nTags: {', '.join(item['tags'])}"
+            message = f"Title: {item['title']}\nURL: {item['link']}\nTags: {', '.join(item['tags'])}"
             send_to_slack(message)
 
 if __name__ == "__main__":
