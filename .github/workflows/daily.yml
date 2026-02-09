@@ -2,8 +2,8 @@ name: Daily Data Collection
 
 on:
   schedule:
-    - cron: "0 0 * * *"  # 매일 00:00 UTC에 실행
-  workflow_dispatch:  # 수동 실행을 허용
+    - cron: "0 1 * * *"  # 매일 10:00 KST에 실행
+  workflow_dispatch:     # 수동 실행 허용
 
 jobs:
   run-daily:
@@ -16,7 +16,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: "3.10"
+          python-version: "3.10"  # 3.10 이 아닌, "3.10"으로 기록하여 형식 구체화
 
       - name: Install dependencies
         run: |
